@@ -243,7 +243,7 @@
 
     // If the resouce is HTML, setContent does not work.
     // This hack set's the documents innerHTML instead.
-    if (resource.url.substr(resource.url.length - 4) === 'html') {
+    if (resource.url.toLowerCase().match(/\.html$/)) {
       var script = "document.getElementsByTagName('html')[0].innerHTML = " +
         JSON.stringify(updatedResource.contents) + ";";
       
