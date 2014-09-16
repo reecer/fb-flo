@@ -40,7 +40,12 @@ var server = flo(
     callback({
       resourceURL: 'bundle' + path.extname(filepath),
       // any string-ish value is acceptable. i.e. strings, Buffers etc.
-      contents: fs.readFileSync(filepath)
+      contents: fs.readFileSync(filepath),
+      update: function(_window, _resourceURL) {
+        // this function is executed in the browser, immediately after the resource has been updated with new content
+        // perform additional steps here to reinitialize your application so it would take advantage of the new resource
+        console.log("Resource " + _resourceURL + " has just been updated with new content");
+      }
     });
   }
 );
@@ -55,7 +60,7 @@ var server = flo(
     * `verbose` `true` or `false` value indicating if flo should be noisy.
     * `glob` a glob string or array of globs to match against the files to watch.
     * `useFilePolling` some platforms that do not support native file watching, you can force the file watcher to work in polling mode.
-    * `pollingInterval` if in polling mode (useFilePolling) then you can set the interval at which to poll for file changes.
+    * `pollingInterval` if in polling mode (useFilePolling) then you can set the interval (in milliseconds) at which to poll for file changes.
 * `resolver` a function to map between files and resources.
 
 The resolver callback is called with two arguments:
@@ -69,6 +74,7 @@ The resolver callback is called with two arguments:
     * `"equal"` test the updated resource `resourceURL` against existing browser resources using an equality check.
     * `"indexOf"` use `String.prototype.indexOf` check
     * `/regexp/` a regexp object to exec.
+  * `update` (optional) a function that will be executed in the browser, immediately after the resource has been updated. This can be used to run custom code that updates your application. It receives the `window` and the `resourceURL` as parameters. This function will be stringified so it could be sent to the client. Make sure you don't use any variables defined outside this function, as they won't be available, and you will get an error.
 
 ### 2. Install the Chrome Extension
 
@@ -86,7 +92,7 @@ See screenshot:
 
 ![](http://i.imgur.com/SamY32i.png)
 
-After any resource is updated, the `fb-flo-reload` event will be triggered on the `window`. The event's data will contain the `url` and `contents` that were provided to the `callback` function on the `flo-server`. Example:
+As an alternative to the `update` function, after any resource is updated, the `fb-flo-reload` event will be triggered on the `window`. The event's data will contain the `url` and `contents` that were provided to the `callback` function on the `flo-server`. The difference between the the `update` function and the `fb-flo-reload` event is that the first one is defined on the server and executed in the client, while the later is defined on the client and executed there as well. It is preferred to use the `update` function, since you won't load your app with code specific to live-editing. Example:
 ```js
 window.addEventListener('fb-flo-reload', function(ev) {
     // perform additional steps here to reinitialize your application so it would take advantage of the new resource
